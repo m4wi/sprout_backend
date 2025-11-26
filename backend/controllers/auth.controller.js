@@ -1,6 +1,10 @@
 import { UserModel } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-const SECRET_KEY = "ingweb1"; // mejor usar .env
+
+const SECRET_KEY = process.env.SECRET_KEY;
+if (!SECRET_KEY) {
+  throw new Error('SECRET_KEY no está definida en las variables de entorno');
+}
 
 export class AuthController {
     static async login(req, res) {

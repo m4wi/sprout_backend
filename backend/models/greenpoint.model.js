@@ -107,7 +107,7 @@ export class GreenPointModel {
         if (Object.keys(updates).length === 0) return null;
 
         // Lista de campos permitidos (debe coincidir con el controlador)
-        const allowedFields = ['description', 'stars', 'qr_code'];
+        const allowedFields = ['description', 'stars', 'qr_code', 'id_collector', 'status'];
         const filteredUpdates = {};
         for (const field of allowedFields) {
             if (updates[field] !== undefined) {
@@ -373,5 +373,45 @@ export class GreenPointModel {
             (longitude - $1::NUMERIC) ^ 2 + (latitude - $2::NUMERIC) ^ 2`;
 
         return (await pool.query(query, [lng, lat, lngRadius, latRadius])).rows;
+    }
+
+    /**
+     * Obtiene todos los greenpoints donde un usuario es el recolector
+     * @param {number} id_collector - ID del recolector
+     * @param {string} status - Filtro opcional por estado
+     * @returns {Array} Array de greenpoints
+     */
+    static async findByCollector(id_collector, status = null) {
+        let query = `
+            SELECT 
+                id_greenpoint,
+                id_category,
+                coordinates,
+                description,
+                qr_code,
+                stars,
+                id_citizen,
+                id_collector,
+                created_at,
+                updated_at,
+                status,
+                longitude,
+                latitude,
+                hour,
+                direction
+            FROM greenpoints
+            WHERE id_collector = $1
+        `;
+        const params = [id_collector];
+
+        if (status) {
+            query += ` AND status = $2`;
+            params.push(status);
+        }
+
+        query += ` ORDER BY created_at DESC`;
+
+        const result = await pool.query(query, params);
+        return result.rows;
     }
 }

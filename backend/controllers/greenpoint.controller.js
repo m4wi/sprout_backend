@@ -490,4 +490,31 @@ export class GreenPointController {
         }
     };
 
+    /**
+     * GET /greenpoints/my-collections
+     * Obtiene todos los greenpoints donde el usuario autenticado es el recolector
+     * Requiere autenticación
+     */
+    static async getMyCollections(req, res) {
+        try {
+            const { status } = req.query; // Filtro opcional por estado
+            const userId = req.userId; // Del middleware authenticateToken
+
+            if (!userId) {
+                return res.status(401).json({ error: 'No autorizado. Debes estar autenticado' });
+            }
+
+            const greenpoints = await GreenPointModel.findByCollector(userId, status);
+
+            res.json({
+                collector_id: userId,
+                greenpoints_count: greenpoints.length,
+                greenpoints
+            });
+        } catch (err) {
+            console.error('Error al obtener mis greenpoints como recolector:', err);
+            res.status(500).json({ error: 'Error al cargar los greenpoints' });
+        }
+    }
+
 }   
