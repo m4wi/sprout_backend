@@ -181,7 +181,7 @@
                 console.log(data)
                 if (response.ok) {
                     // Guardar token y redirigir
-                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
 
                     // Redirigir según el tipo de usuario
@@ -189,7 +189,7 @@
                     if (userType === 'admin') {
                         window.location.href = '/pages/admin/dashboard.html';
                     } else {
-                        window.location.href = '/pages/navigation/profile.html';
+                        window.location.href = '/pages/navigation/start.html';
                     }
                 } else {
                     // Mostrar error del backend

@@ -18,7 +18,7 @@ import authRoutes from './routes/auth.routes.js'
 const app = express();
 app.use(cors({
   origin: "*",     // cualquiera
-  methods: "GET,POST,PUT,DELETE",
+  methods: "GET,POST,PUT,DELETE,PATCH",
   allowedHeaders: "Content-Type, Authorization"
 }));
 
@@ -40,14 +40,14 @@ app.use('/greenpoints', greenpointRoutes);
 app.use('/api', reservationRoutes);
 app.use('/auth', authRoutes);
 
-import upload  from './middlewares/upload.js'
+import upload from './middlewares/upload.js'
 
 //app.post('/create', upload, UserController.updateProfilePhoto)
 
-// ✅ Obtén __dirname correctamente en ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 app.use('/profile_photo', express.static(join(__dirname, 'storage', 'profile_photo')));
+app.use('/greenpoint_photo', express.static(join(__dirname, 'storage', 'greenpoint_photo')));
 
 
 

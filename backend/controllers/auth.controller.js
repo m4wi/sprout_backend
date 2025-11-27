@@ -16,13 +16,16 @@ export class AuthController {
         try {
 
             const user = await UserModel.findByCredentials(email, password);
-            console.log(req.body);
+            console.log(user);
             if (!user) {
                 return res.status(401).json({ error: 'Credenciales inválidas' });
             }
 
             const token = jwt.sign(
-                { id: user.id_usuario},
+                { 
+                    id: user.id_user,
+                    tipo: user.user_type
+                },
                 SECRET_KEY,
                 { expiresIn: "1h" }
             );

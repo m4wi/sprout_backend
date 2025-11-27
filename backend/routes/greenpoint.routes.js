@@ -2,11 +2,16 @@ import { Router } from 'express';
 import { GreenPointController } from '../controllers/greenpoint.controller.js'
 import { GreenpointCommentController } from '../controllers/greenpointComment.controller.js';
 import { authenticateToken } from '../middlewares/auth.js';
+import { PhotoController } from '../controllers/photo.controller.js';
+import { ChatController } from '../controllers/chat.controller.js';
+import uploadGreenpointPhoto from '../middlewares/uploadGreenpointPhoto.js';
 
 const router = Router();
 
 
 router.get('/', GreenPointController.getAllGreenPoints )
+// Rutas específicas antes de genéricas
+router.get('/myCollections', authenticateToken, GreenPointController.getMyCollections)
 router.get('/:id', GreenPointController.getGreenPoint)
 router.post('/', GreenPointController.createGreenPoint )
 router.delete('/:id', GreenPointController.deleteGreenPoint)
@@ -14,8 +19,7 @@ router.delete('/:id', GreenPointController.deleteGreenPoint)
 router.get('/findCategory/:categoryId', GreenPointController.findGreenPointsByCategory)
 router.get('/nearby', GreenPointController.findGreenPointsByLocation)
 
-// Obtener greenpoints donde el usuario es recolector (requiere autenticación)
-router.get('/my-collections', authenticateToken, GreenPointController.getMyCollections)
+// (ubicada arriba) Obtener greenpoints donde el usuario es recolector
 
 
 
@@ -35,5 +39,18 @@ router.delete('/comments/:id', authenticateToken, GreenpointCommentController.de
 
 // Obtener comentarios de un usuario
 router.get('/users/:id/comments', GreenpointCommentController.getCommentsByUser);
+
+router.get('/:id/photos', PhotoController.getPhotosByGreenpoint);
+router.post('/:id/photos', authenticateToken, uploadGreenpointPhoto.single('photo'), PhotoController.uploadPhoto);
+
+// Materiales del greenpoint (requiere autenticación)
+router.get('/:id/materials', authenticateToken, GreenPointController.getGreenPointsMaterial);
+
+// Categorías del greenpoint
+router.get('/:id/categories', GreenPointController.getCategories);
+
+// Chat del greenpoint
+router.get('/:id/chat', authenticateToken, ChatController.getChatByGreenpoint);
+router.post('/:id/chat/message', authenticateToken, ChatController.sendMessageToGreenpoint);
 
 export default router;

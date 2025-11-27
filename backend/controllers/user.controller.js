@@ -63,7 +63,7 @@ export class UserController {
         const updates = req.body;
         // Lista de campos que el cliente puede actualizar (¡protege campos sensibles!)
         const allowedFields = [
-            'name', 'lastname', 'phone', 'avatar_url', 'profile_description', "email", "user_type"
+            'name', 'lastname', 'phone', 'avatar_url', 'profile_description', "email", "user_type", "username", "direction"
         ];
         
         // Filtrar solo campos permitidos y que estén presentes

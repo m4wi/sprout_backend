@@ -1,9 +1,33 @@
 import { API_URL, STATIC_PHOTO_API_URL } from '/config.js';
 
+// Variable global para almacenar el ID del usuario
+let currentUserId = null;
 
-const getUserData = async () => {
+/**
+ * Obtiene el token de autenticación del localStorage
+ */
+const getAuthToken = () => {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+};
+
+/**
+ * Obtiene los datos del usuario desde el backend
+ */
+const getUserData = async (userId) => {
     try {
-        const response = await fetch(`${API_URL}/users/1`);
+        const token = getAuthToken();
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_URL}/users/${userId}`, {
+            method: 'GET',
+            headers: headers
+        });
 
         if (!response.ok) {
             throw new Error(`Error: ${response.status}`);
@@ -17,37 +41,204 @@ const getUserData = async () => {
     }
 };
 
+/**
+ * Pobla el formulario con los datos del usuario
+ */
 const populateForm = (user) => {
-  // Inputs (value)
-  document.getElementById('name').value = user.name || '';
-  document.getElementById('lastname').value = user.lastname || '';
-  document.getElementById('username').value = user.username || '';
-  document.getElementById('email').value = user.email || '';
-  document.getElementById('phone').value = user.phone || '';
-  document.getElementById('user_type').value = user.user_type || '';
-  document.getElementById('profile_description').value = user.profile_description || '';
-  document.getElementById('direction').value = user.direction || '';
+    // Guardar el ID del usuario
+    currentUserId = user.id_user || user.id;
 
-  // Texto (innerText o textContent)
-  document.getElementById('userFullname').textContent = `${user.name} ${user.lastname}` || '';
-  document.getElementById('userPhone').textContent = user.phone || 'unknown';
-  document.getElementById('userEmail').textContent = user.email || 'unknown';
-  document.getElementById('userDirection').textContent = user.direction || 'unknown';
+    // Inputs (value)
+    document.getElementById('name').value = user.name || '';
+    document.getElementById('lastname').value = user.lastname || '';
+    document.getElementById('username').value = user.username || '';
+    document.getElementById('email').value = user.email || '';
+    document.getElementById('phone').value = user.phone || '';
+    document.getElementById('user_type').value = user.user_type || '';
+    document.getElementById('profile_description').value = user.profile_description || '';
+    document.getElementById('direction').value = user.direction || '';
 
-  // Imagen
-  document.getElementById('userPhoto').src = `${STATIC_PHOTO_API_URL}//${user.avatar_url}.webp` || 'default-avatar.png';
+    // Texto (innerText o textContent)
+    document.getElementById('userFullname').textContent = `${user.name || ''} ${user.lastname || ''}`.trim() || 'Usuario';
+    document.getElementById('userPhone').textContent = user.phone || 'No especificado';
+    document.getElementById('userEmail').textContent = user.email || 'No especificado';
+    document.getElementById('userDirection').textContent = user.direction || 'No especificado';
+
+    // Imagen
+    if (user.avatar_url) {
+        document.getElementById('userPhoto').src = `${STATIC_PHOTO_API_URL}${user.avatar_url}`;
+    } else {
+        document.getElementById('userPhoto').src = 'default-avatar.png';
+    }
 };
 
+/**
+ * Actualiza la información mostrada en el perfil (lado izquierdo)
+ */
+const updateProfileDisplay = (user) => {
+    document.getElementById('userFullname').textContent = `${user.name || ''} ${user.lastname || ''}`.trim() || 'Usuario';
+    document.getElementById('userPhone').textContent = user.phone || 'No especificado';
+    document.getElementById('userEmail').textContent = user.email || 'No especificado';
+    document.getElementById('userDirection').textContent = user.direction || 'No especificado';
+};
 
-// # sendFormButton mapear el boton y los elementos del form
+/**
+ * Muestra un mensaje de éxito o error
+ */
+const showMessage = (message, type = 'success') => {
+    // Crear elemento de mensaje si no existe
+    let messageDiv = document.getElementById('message');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'message';
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(messageDiv);
+    }
 
+    messageDiv.textContent = message;
+    messageDiv.style.backgroundColor = type === 'success' ? '#4caf50' : '#f44336';
+    messageDiv.style.color = 'white';
 
+    // Ocultar después de 3 segundos
+    setTimeout(() => {
+        messageDiv.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            messageDiv.remove();
+        }, 300);
+    }, 3000);
+};
 
-getUserData()
-  .then(user => {
-    console.log('Usuario cargado:', user);
-    populateForm(user);
-  })
-  .catch(error => {
-    console.error('No se pudo cargar el usuario:', error);
-  });
+/**
+ * Envía los datos del formulario al backend
+ */
+const updateUserData = async (userId, formData) => {
+    try {
+        const token = getAuthToken();
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        // Preparar los datos según los campos permitidos por el backend
+        const updateData = {
+            name: formData.get('name') || undefined,
+            lastname: formData.get('lastname') || undefined,
+            email: formData.get('email') || undefined,
+            phone: formData.get('phone') || undefined,
+            direction: formData.get('direction') || undefined,
+            user_type: formData.get('user_type') || undefined,
+            profile_description: formData.get('profile_description') || undefined,
+            username: formData.get('username') || undefined
+        };
+
+        // Eliminar campos undefined
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key] === undefined || updateData[key] === '') {
+                delete updateData[key];
+            }
+        });
+
+        const response = await fetch(`${API_URL}/users/update/${userId}`, {
+            method: 'PATCH',
+            headers: headers,
+            body: JSON.stringify(updateData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+            throw new Error(errorData.error || `Error: ${response.status}`);
+        }
+
+        const updatedUser = await response.json();
+        return updatedUser;
+    } catch (error) {
+        console.error('Error al actualizar usuario:', error);
+        throw error;
+    }
+};
+
+/**
+ * Maneja el envío del formulario
+ */
+const handleFormSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!currentUserId) {
+        showMessage('Error: No se pudo identificar al usuario', 'error');
+        return;
+    }
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const submitButton = document.getElementById('sendFormButton');
+
+    // Deshabilitar el botón mientras se procesa
+    submitButton.disabled = true;
+    submitButton.textContent = 'Guardando...';
+
+    try {
+        const updatedUser = await updateUserData(currentUserId, formData);
+        
+        // Actualizar la visualización del perfil
+        updateProfileDisplay(updatedUser);
+        
+        showMessage('Perfil actualizado exitosamente', 'success');
+        
+        // Recargar los datos completos del usuario para asegurar sincronización
+        const freshUserData = await getUserData(currentUserId);
+        populateForm(freshUserData);
+        
+    } catch (error) {
+        showMessage(error.message || 'Error al actualizar el perfil', 'error');
+        console.error('Error:', error);
+    } finally {
+        // Rehabilitar el botón
+        submitButton.disabled = false;
+        submitButton.textContent = 'Guardar Cambios';
+    }
+};
+
+/**
+ * Inicializa la página
+ */
+const init = async () => {
+    try {
+        // Obtener el ID del usuario (por ahora usa 1, pero deberías obtenerlo del token o de la sesión)
+        // TODO: Obtener el ID del usuario desde el token JWT o la sesión
+        const userId = 1; // Esto debería venir del token o sesión
+        
+        const user = await getUserData(userId);
+        console.log('Usuario cargado:', user);
+        populateForm(user);
+
+        // Agregar manejador de evento al formulario
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', handleFormSubmit);
+        }
+
+    } catch (error) {
+        console.error('No se pudo cargar el usuario:', error);
+        showMessage('Error al cargar los datos del usuario', 'error');
+    }
+};
+
+// Ejecutar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}

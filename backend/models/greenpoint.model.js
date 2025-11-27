@@ -4,19 +4,51 @@ export class GreenPointModel {
     static async getAllPoints() {
         const query = `
         SELECT 
-            id_greenpoint,
-            id_category,
-            coordinates,
-            description,
-            qr_code,
-            stars,
-            id_citizen,
-            id_collector,
-            created_at,
-            updated_at,
-            status
-        FROM greenpoints
-        ORDER BY created_at DESC`;
+            g.id_greenpoint,
+            g.id_category,
+            g.coordinates,
+            g.description,
+            g.qr_code,
+            g.stars,
+            g.id_citizen,
+            g.id_collector,
+            g.created_at,
+            g.updated_at,
+            g.status,
+            g.hour,
+            g.direction,
+            u.phone,
+            ARRAY_AGG(DISTINCT c.name) FILTER (WHERE c.id_category IS NOT NULL) AS categories,
+            COALESCE(
+              JSON_AGG(
+                JSON_BUILD_OBJECT(
+                  'quantity', gm.quantity,
+                  'unit', gm.unit,
+                  'description', gm.description
+                )
+              ) FILTER (WHERE gm.id_greenpoint_material IS NOT NULL), '[]'
+            ) AS materials
+        FROM greenpoints g
+        LEFT JOIN users u ON g.id_citizen = u.id_user
+        LEFT JOIN greenpoints_categories gc ON g.id_greenpoint = gc.id_greenpoint
+        LEFT JOIN categories c ON gc.id_category = c.id_category
+        LEFT JOIN greenpoint_material gm ON g.id_greenpoint = gm.id_greenpoint
+        WHERE g.status != 'deleted'
+        GROUP BY 
+            g.id_greenpoint,
+            g.id_category,
+            g.description,
+            g.qr_code,
+            g.stars,
+            g.id_citizen,
+            g.id_collector,
+            g.created_at,
+            g.updated_at,
+            g.status,
+            g.hour,
+            g.direction,
+            u.phone
+        ORDER BY g.created_at DESC`;
 
         const result = await pool.query(query);
         return result.rows;
@@ -307,26 +339,59 @@ export class GreenPointModel {
         // Consulta con paginación
         const query = `
         SELECT 
-            g.id_greenpoint,
-            g.coordinates,
-            g.description,
-            g.qr_code,
-            g.stars,
-            g.id_citizen,
-            g.id_collector,
-            g.created_at,
-            g.updated_at,
-            g.status,
-            c.name AS category_name
+        g.id_greenpoint,
+        g.coordinates,
+        g.description,
+        g.qr_code,
+        g.hour,
+        g.stars,
+        g.id_citizen,
+        g.id_collector,
+        g.created_at,
+        g.updated_at,
+        g.status,
+        CONCAT(u.name, ' ', u.lastname) AS citizen_name,
+        u.avatar_url,
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+            'id_category', c.id_category,
+            'name', c.name,
+            'description', c.description,
+            'icon_url', c.icon_url,
+            'color_hex', c.color_hex
+            )
+        ) AS categories
         FROM greenpoints g
         JOIN greenpoints_categories gc ON g.id_greenpoint = gc.id_greenpoint
         JOIN categories c ON gc.id_category = c.id_category
-        WHERE gc.id_category = $1 AND g.status = 'approved'
+        JOIN users u ON g.id_citizen = u.id_user
+        WHERE 
+        g.status = 'approved'
+        AND EXISTS (
+            SELECT 1 
+            FROM greenpoints_categories gc2 
+            WHERE gc2.id_greenpoint = g.id_greenpoint 
+            AND gc2.id_category = $1  -- Filtrar por categoría específica
+        )
+        GROUP BY 
+        g.id_greenpoint,
+        g.description,
+        g.qr_code,
+        u.name,
+        u.lastname,
+        g.hour,
+        g.stars,
+        g.id_citizen,
+        g.id_collector,
+        g.created_at,
+        g.updated_at,
+        u.avatar_url,
+        g.status
         ORDER BY g.created_at DESC
         LIMIT $2 OFFSET $3`;
 
         const countQuery = `
-        SELECT COUNT(*) FROM greenpoints g
+        SELECT COUNT(DISTINCT g.id_greenpoint) FROM greenpoints g
         JOIN greenpoints_categories gc ON g.id_greenpoint = gc.id_greenpoint
         WHERE gc.id_category = $1 AND g.status = 'approved'`;
 

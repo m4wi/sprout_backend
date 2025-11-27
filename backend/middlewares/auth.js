@@ -18,8 +18,8 @@ if (!SECRET_KEY) {
 export function authenticateToken(req, res, next) {
   // Obtener el token del header Authorization
   const authHeader = req.headers['authorization'];
+  
   const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>"
-
   // Si no hay token, retornar error 401 (No autorizado)
   if (!token) {
     return res.status(401).json({ 
@@ -57,7 +57,7 @@ export function authenticateToken(req, res, next) {
       username: decoded.username,
       tipo: decoded.tipo
     };
-
+    console.log(decoded, SECRET_KEY)
     // Continuar con el siguiente middleware o ruta
     next();
   });

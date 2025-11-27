@@ -68,7 +68,7 @@ export class GreenpointCommentController {
             const { id } = req.params;
             const { content } = req.body;
             const userId = req.userId; // Del middleware authenticateToken
-
+            console.log(userId)
             if (!userId) {
                 return res.status(401).json({ error: 'No autorizado. Debes estar autenticado' });
             }

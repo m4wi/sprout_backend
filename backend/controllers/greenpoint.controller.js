@@ -84,7 +84,7 @@ export class GreenPointController {
             }
 
             // Verificar que el punto exista y pertenezca al usuario
-            const point = await Greenpoint.findById(pointId);
+            const point = await GreenPointModel.findById(pointId);
             if (!point) {
                 return res.status(404).json({ error: 'Greenpoint no encontrado' });
             }
@@ -124,7 +124,7 @@ export class GreenPointController {
             }
 
             // 3. Obtener el greenpoint actual
-            const currentPoint = await Greenpoint.findById(pointId);
+            const currentPoint = await GreenPointModel.findById(pointId);
             if (!currentPoint) {
                 return res.status(404).json({ error: 'Greenpoint no encontrado' });
             }
@@ -201,7 +201,7 @@ export class GreenPointController {
             }
 
             // 6. Guardar todos los materiales (el modelo lo hace en transacción)
-            const savedMaterials = await GreenpointMaterial.createManyMaterial(greenpointId, materials);
+            const savedMaterials = await GreenPointModel.createManyMaterial(greenpointId, materials);
 
             res.status(201).json({
                 message: `Se registraron ${savedMaterials.length} materiales`,
@@ -228,7 +228,7 @@ export class GreenPointController {
             }
 
             // Verificar que el greenpoint exista y pertenezca al usuario
-            const point = await Greenpoint.findById(greenpointId);
+            const point = await GreenPointModel.findById(greenpointId);
             if (!point) {
                 return res.status(404).json({ error: 'Greenpoint no encontrado' });
             }
@@ -239,7 +239,7 @@ export class GreenPointController {
             }
 
             // Obtener todos los materiales del greenpoint
-            const materials = await GreenpointMaterial.getByGreenpoint(greenpointId);
+            const materials = await GreenPointModel.getAllMaterials(greenpointId);
 
             res.json({
                 greenpoint_id: greenpointId,
@@ -268,13 +268,13 @@ export class GreenPointController {
             }
 
             // 1. Obtener el material
-            const material = await GreenpointMaterial.findById(materialId);
+            const material = await GreenPointModel.findMaterialById(materialId);
             if (!material) {
                 return res.status(404).json({ error: 'Material no encontrado' });
             }
 
             // 2. Obtener el greenpoint para verificar permisos
-            const point = await Greenpoint.findById(material.id_greenpoint);
+            const point = await GreenPointModel.findById(material.id_greenpoint);
             if (!point) {
                 return res.status(404).json({ error: 'Greenpoint asociado no encontrado' });
             }
@@ -285,7 +285,7 @@ export class GreenPointController {
             }
 
             // 4. Actualizar el material
-            const updatedMaterial = await GreenpointMaterial.updateMaterial(materialId, updates);
+            const updatedMaterial = await GreenPointModel.updateMaterial(materialId, updates);
             if (!updatedMaterial) {
                 return res.status(404).json({ error: 'Material no encontrado para actualizar' });
             }
@@ -316,7 +316,7 @@ export class GreenPointController {
             }
 
             // Verificar que el greenpoint pertenezca al usuario
-            const point = await Greenpoint.findById(greenpointId);
+            const point = await GreenPointModel.findById(greenpointId);
             if (!point || point.id_citizen !== userId) {
                 return res.status(403).json({ error: 'No tienes permiso para este greenpoint' });
             }
@@ -335,7 +335,7 @@ export class GreenPointController {
             });
 
             // Verificar que todos los materiales pertenezcan a este greenpoint
-            const existingMaterials = await GreenpointMaterial.getMaterialsByIds(materialIds);
+            const existingMaterials = await GreenPointModel.getMaterialsByIds(materialIds);
             const existingIds = new Set(existingMaterials.map(m => m.id_greenpoint_material));
             const missingIds = materialIds.filter(id => !existingIds.has(id));
 
@@ -350,7 +350,7 @@ export class GreenPointController {
             }
 
             // Actualizar en transacción
-            const updated = await GreenpointMaterial.bulkMaterialUpdate(materials);
+            const updated = await GreenPointModel.bulkMaterialUpdate(materials);
             res.json({ message: `Se actualizaron ${updated.length} materiales`, materials: updated });
         } catch (err) {
             console.error('Error en actualización masiva:', err);
@@ -372,7 +372,7 @@ export class GreenPointController {
             }
 
             // Verificar que el greenpoint pertenezca al usuario
-            const point = await Greenpoint.findById(greenpointId);
+            const point = await GreenPointModel.findById(greenpointId);
             if (!point || point.id_citizen !== userId) {
                 return res.status(403).json({ error: 'No puedes asignar categorías a este greenpoint' });
             }
@@ -401,8 +401,8 @@ export class GreenPointController {
             const { id } = req.params;
             const greenPointsCategories = await GreenpointCategory.getCategoriesByGreenpoint(id);
             res.json(greenPointsCategories);
-        } catch (error) {
-            console.error('Error al obtener categorias:', err);
+            } catch (error) {
+            console.error('Error al obtener categorias:', error);
             res.status(500).json({ error: 'Error al cargar las categorias' });
         }
     }
@@ -499,7 +499,7 @@ export class GreenPointController {
         try {
             const { status } = req.query; // Filtro opcional por estado
             const userId = req.userId; // Del middleware authenticateToken
-
+            console.log(userId)
             if (!userId) {
                 return res.status(401).json({ error: 'No autorizado. Debes estar autenticado' });
             }

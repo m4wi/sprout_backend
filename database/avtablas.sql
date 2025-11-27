@@ -1,5 +1,4 @@
--- Active: 1764120770015@@ep-fragrant-resonance-ac3k1ssp-pooler.sa-east-1.aws.neon.tech@5432@sprout
-
+-- Active: 1764120249245@@ep-fragrant-resonance-ac3k1ssp-pooler.sa-east-1.aws.neon.tech@5432@sprout
 
 CREATE TABLE users (
     id_user SERIAL PRIMARY KEY,
@@ -28,9 +27,9 @@ CREATE TABLE greenpoint_chats (
     id_greenpoint INTEGER NOT NULL UNIQUE,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sender_id) REFERENCES users(id_user) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES users(id_user) ON DELETE CASCADE,
-    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints(id_greenpoint) ON DELETE CASCADE
+    FOREIGN KEY (sender_id) REFERENCES users (id_user) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users (id_user) ON DELETE CASCADE,
+    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints (id_greenpoint) ON DELETE CASCADE
 );
 
 CREATE TABLE greenpoint_chat_messages (
@@ -41,10 +40,9 @@ CREATE TABLE greenpoint_chat_messages (
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(20) DEFAULT 'sent' NOT NULL,
-    FOREIGN KEY (id_chat) REFERENCES greenpoint_chats(id_chat) ON DELETE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES users(id_user) ON DELETE CASCADE
+    FOREIGN KEY (id_chat) REFERENCES greenpoint_chats (id_chat) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users (id_user) ON DELETE CASCADE
 )
-
 
 CREATE TABLE greenpoints (
     id_greenpoint SERIAL PRIMARY KEY,
@@ -58,13 +56,13 @@ CREATE TABLE greenpoints (
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- publication_date
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- publication_date
     status VARCHAR(20) DEFAULT 'pending' NOT NULL,
-    FOREIGN KEY (id_citizen) REFERENCES users(id_user) ON DELETE CASCADE,
-    FOREIGN KEY (id_collector) REFERENCES users(id_user) ON DELETE CASCADE
+    FOREIGN KEY (id_citizen) REFERENCES users (id_user) ON DELETE CASCADE,
+    FOREIGN KEY (id_collector) REFERENCES users (id_user) ON DELETE CASCADE
 )
 
 ALTER TABLE greenpoints ADD COLUMN hour TEXT;
-ALTER TABLE greenpoints ADD COLUMN direction TEXT;
 
+ALTER TABLE greenpoints ADD COLUMN direction TEXT;
 
 CREATE TABLE greenpoint_material (
     id_greenpoint_material SERIAL PRIMARY KEY,
@@ -76,15 +74,14 @@ CREATE TABLE greenpoint_material (
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 )
 
-
 CREATE TABLE greenpoints_categories (
     id_greenpoint_category SERIAL PRIMARY KEY,
     id_greenpoint INTEGER NOT NULL,
     id_category INTEGER NOT NULL,
-    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints(id_greenpoint) ON DELETE CASCADE,
-    FOREIGN KEY (id_category) REFERENCES categories(id_category) ON DELETE CASCADE
+    CONSTRAINT uniq_greenpoint_category UNIQUE (id_greenpoint, id_category),
+    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints (id_greenpoint) ON DELETE CASCADE,
+    FOREIGN KEY (id_category) REFERENCES categories (id_category) ON DELETE CASCADE
 )
-
 
 CREATE TABLE categories (
     id_category SERIAL PRIMARY KEY,
@@ -97,15 +94,14 @@ CREATE TABLE categories (
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-
 CREATE TABLE direct_chats (
     id_chat SERIAL PRIMARY KEY,
     sender_id INTEGER NOT NULL,
     receiver_id INTEGER NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sender_id) REFERENCES users(id_user) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES users(id_user) ON DELETE CASCADE
+    FOREIGN KEY (sender_id) REFERENCES users (id_user) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users (id_user) ON DELETE CASCADE
 );
 
 CREATE TABLE direct_chat_messages (
@@ -116,8 +112,8 @@ CREATE TABLE direct_chat_messages (
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(20) DEFAULT 'sent' NOT NULL,
-    FOREIGN KEY (id_chat) REFERENCES direct_chats(id_chat) ON DELETE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES users(id_user) ON DELETE CASCADE
+    FOREIGN KEY (id_chat) REFERENCES direct_chats (id_chat) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users (id_user) ON DELETE CASCADE
 );
 
 CREATE TABLE greenpoints_report (
@@ -129,8 +125,8 @@ CREATE TABLE greenpoints_report (
     status VARCHAR(20) DEFAULT 'pending' NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_user) REFERENCES users(id_user) ON DELETE CASCADE,
-    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints(id_greenpoint) ON DELETE CASCADE
+    FOREIGN KEY (id_user) REFERENCES users (id_user) ON DELETE CASCADE,
+    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints (id_greenpoint) ON DELETE CASCADE
 );
 
 CREATE TABLE notifications (
@@ -143,7 +139,7 @@ CREATE TABLE notifications (
     priority INTEGER DEFAULT 0 CHECK (priority BETWEEN 0 AND 5),
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_user) REFERENCES users(id_user) ON DELETE CASCADE
+    FOREIGN KEY (id_user) REFERENCES users (id_user) ON DELETE CASCADE
 );
 
 CREATE TABLE greenpoint_comments (
@@ -154,8 +150,8 @@ CREATE TABLE greenpoint_comments (
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     -- Claves foráneas
-    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints(id_greenpoint) ON DELETE CASCADE,
-    FOREIGN KEY (id_user) REFERENCES users(id_user) ON DELETE CASCADE
+    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints (id_greenpoint) ON DELETE CASCADE,
+    FOREIGN KEY (id_user) REFERENCES users (id_user) ON DELETE CASCADE
 );
 
 CREATE TABLE photos (
@@ -164,81 +160,40 @@ CREATE TABLE photos (
     url TEXT NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints(id_greenpoint) ON DELETE CASCADE
+    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints (id_greenpoint) ON DELETE CASCADE
 );
 
 CREATE TABLE greenpoint_reservations (
     id_reservation SERIAL PRIMARY KEY,
     id_greenpoint INTEGER NOT NULL,
     id_collector INTEGER NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected', 'cancelled')),
+    status VARCHAR(20) DEFAULT 'pending' NOT NULL CHECK (
+        status IN (
+            'pending',
+            'accepted',
+            'rejected',
+            'cancelled'
+        )
+    ),
     message TEXT,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints(id_greenpoint) ON DELETE CASCADE,
-    FOREIGN KEY (id_collector) REFERENCES users(id_user) ON DELETE CASCADE
+    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints (id_greenpoint) ON DELETE CASCADE,
+    FOREIGN KEY (id_collector) REFERENCES users (id_user) ON DELETE CASCADE
 );
 
 -- Evitar múltiples reservas pendientes del mismo recolector en el mismo greenpoint
-CREATE UNIQUE INDEX unique_pending_greenpoint_collector
-ON greenpoint_reservations(id_greenpoint, id_collector)
-WHERE status = 'pending';
+CREATE UNIQUE INDEX unique_pending_greenpoint_collector ON greenpoint_reservations (id_greenpoint, id_collector)
+WHERE
+    status = 'pending';
 
 -- Índice para búsquedas rápidas por greenpoint y estado
-CREATE INDEX idx_greenpoint_reservations_greenpoint_status ON greenpoint_reservations(id_greenpoint, status);
-CREATE INDEX idx_greenpoint_reservations_collector ON greenpoint_reservations(id_collector);
+CREATE INDEX idx_greenpoint_reservations_greenpoint_status ON greenpoint_reservations (id_greenpoint, status);
 
+CREATE INDEX idx_greenpoint_reservations_collector ON greenpoint_reservations (id_collector);
 
 # crear una tabla comentarios de muchos a muchos con greenpoints
-
-
-
 
 ALTER TABLE greenpoints 
 ADD COLUMN longitude NUMERIC(10, 6),
 ADD COLUMN latitude NUMERIC(10, 6);
-
--- Si usas POINT, extrae las coordenadas (una sola vez)
-SELECT 
-  coordinates::text,
-  -- Extraer longitude: todo después de '(' y antes de ','
-  SPLIT_PART(TRIM(BOTH '()' FROM coordinates::text), ',', 1) AS longitude,
-  -- Extraer latitude: todo después de ','
-  SPLIT_PART(TRIM(BOTH '()' FROM coordinates::text), ',', 2) AS latitude
-FROM greenpoints
-LIMIT 5;
-
-UPDATE greenpoints 
-SET 
-  longitude = SPLIT_PART(TRIM(BOTH '()' FROM coordinates::text), ',', 1)::NUMERIC,
-  latitude = SPLIT_PART(TRIM(BOTH '()' FROM coordinates::text), ',', 2)::NUMERIC
-WHERE coordinates IS NOT NULL;
-
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'greenpoints' 
-  AND column_name IN ('longitude', 'latitude');
-
-SELECT longitude, latitude FROM greenpoints LIMIT 1;
-
-
-CREATE OR REPLACE FUNCTION update_coordinates_columns()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Extraer longitude (x) y latitude (y) del POINT
-  NEW.longitude := NEW.coordinates[0];
-  NEW.latitude := NEW.coordinates[1];
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_update_coordinates
-  BEFORE INSERT OR UPDATE OF coordinates
-  ON greenpoints
-  FOR EACH ROW
-  EXECUTE FUNCTION update_coordinates_columns();
-
-
-UPDATE greenpoints 
-SET coordinates = POINT(-70.500, -18.100)
-WHERE id_greenpoint = 1;
