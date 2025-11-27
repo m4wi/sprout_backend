@@ -6,13 +6,13 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 //middlewares
-import { authenticateToken } from './middlewares/auth.js';
+import { authenticateToken } from './src/middlewares/auth.js';
 
 // routes
-import userRoutes from './routes/user.routes.js'
-import greenpointRoutes from './routes/greenpoint.routes.js'
-import reservationRoutes from './routes/greenpointReservation.routes.js'
-import authRoutes from './routes/auth.routes.js'
+import userRoutes from './src/routes/user.routes.js'
+import greenpointRoutes from './src/routes/greenpoint.routes.js'
+import reservationRoutes from './src/routes/greenpointReservation.routes.js'
+import authRoutes from './src/routes/auth.routes.js'
 
 
 const app = express();
@@ -40,7 +40,7 @@ app.use('/greenpoints', greenpointRoutes);
 app.use('/api', reservationRoutes);
 app.use('/auth', authRoutes);
 
-import upload from './middlewares/upload.js'
+import upload from './src/middlewares/upload.js'
 
 //app.post('/create', upload, UserController.updateProfilePhoto)
 
