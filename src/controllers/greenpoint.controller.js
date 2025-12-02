@@ -35,7 +35,10 @@ export class GreenPointController {
                 description,
                 qr_code,
                 stars,
-                id_citizen
+                id_citizen,
+                hour,
+                direction,
+                date_collect
             } = req.body;
 
             // Validar campos requeridos
@@ -51,7 +54,10 @@ export class GreenPointController {
                 stars,
                 id_citizen,
                 id_collector: null, // opcional, puede asignarse después
-                status: 'created'   // o 'approved' si es un admin
+                status: 'created',   // o 'approved' si es un admin
+                hour,
+                direction,
+                date_collect
             });
 
             res.status(201).json(newPoint);
@@ -72,7 +78,7 @@ export class GreenPointController {
     static async deleteGreenPoint(req, res) {
         try {
             const { id } = req.params;
-            const userId = req.user?.id_user;
+            const userId = req.user?.id;
 
             if (!userId) {
                 return res.status(401).json({ error: 'No autorizado' });
@@ -110,7 +116,7 @@ export class GreenPointController {
     static async updateGreenPoint(req, res) {
         try {
             const { id } = req.params;
-            const userId = req.user?.id_user;
+            const userId = req.user?.id;
 
             // 1. Validar autenticación
             if (!userId) {
@@ -165,7 +171,7 @@ export class GreenPointController {
         try {
             const { id } = req.params;
             const { materials } = req.body; // ← ahora es un array
-            const userId = req.user?.id_user;
+            const userId = req.user?.id;
 
             // 1. Validar autenticación
             if (!userId) {
@@ -179,7 +185,7 @@ export class GreenPointController {
             }
 
             // 3. Verificar que el greenpoint exista y pertenezca al usuario
-            const point = await Greenpoint.findById(greenpointId);
+            const point = await GreenPointModel.findById(greenpointId);
             if (!point) {
                 return res.status(404).json({ error: 'Greenpoint no encontrado' });
             }
@@ -197,7 +203,6 @@ export class GreenPointController {
                 if (!mat.quantity || typeof mat.quantity !== 'number' || mat.quantity <= 0) {
                     return res.status(400).json({ error: `Material ${index + 1}: quantity debe ser un número positivo` });
                 }
-                // unit y description son opcionales
             }
 
             // 6. Guardar todos los materiales (el modelo lo hace en transacción)
@@ -216,7 +221,7 @@ export class GreenPointController {
     static async getGreenPointsMaterial(req, res) {
         try {
             const { id } = req.params;
-            const userId = req.user?.id_user;
+            const userId = req.user?.id;
 
             if (!userId) {
                 return res.status(401).json({ error: 'No autorizado' });
@@ -256,7 +261,7 @@ export class GreenPointController {
         try {
             const { id } = req.params; // id del material (id_greenpoint_material)
             const updates = req.body;
-            const userId = req.user?.id_user;
+            const userId = req.user?.id;
 
             if (!userId) {
                 return res.status(401).json({ error: 'No autorizado' });
@@ -304,7 +309,7 @@ export class GreenPointController {
         try {
             const { id } = req.params; // id del greenpoint
             const { materials } = req.body;
-            const userId = req.user?.id_user;
+            const userId = req.user?.id;
 
             if (!userId) {
                 return res.status(401).json({ error: 'No autorizado' });
@@ -362,7 +367,7 @@ export class GreenPointController {
         try {
             const { id } = req.params;
             const { categoryIds } = req.body;
-            const userId = req.user?.id_user;
+            const userId = req.user?.id;
 
             if (!userId) return res.status(401).json({ error: 'No autorizado' });
 
@@ -382,14 +387,15 @@ export class GreenPointController {
                 return res.status(400).json({ error: 'Se requiere al menos una categoría' });
             }
 
-            for (const catId of categoryIds) {
-                const category = await Category.findById(catId);
-                if (!category) {
-                    return res.status(400).json({ error: `Categoría no válida: ${catId}` });
-                }
-            }
+            //for (const catId of categoryIds) {
+            //    const category = await Category.findById(catId);
+            //    if (!category) {
+            //        return res.status(400).json({ error: `Categoría no válida: ${catId}` });
+            //    }
+            //}
 
             const assigned = await GreenpointCategory.assignCategories(greenpointId, categoryIds);
+
             res.json({ message: 'Categorías asignadas', categories: assigned });
         } catch (err) {
             console.error('Error al asignar categorías:', err);
@@ -401,7 +407,7 @@ export class GreenPointController {
             const { id } = req.params;
             const greenPointsCategories = await GreenpointCategory.getCategoriesByGreenpoint(id);
             res.json(greenPointsCategories);
-            } catch (error) {
+        } catch (error) {
             console.error('Error al obtener categorias:', error);
             res.status(500).json({ error: 'Error al cargar las categorias' });
         }
@@ -468,14 +474,14 @@ export class GreenPointController {
             }
             console.log(latitude, longitude, radiusKm)
             const greenpoints = await GreenPointModel.findByLocation(latitude, longitude, radiusKm);
-            
+
             // Formatear coordenadas para el frontend
             const formatted = greenpoints.map(gp => ({
-            ...gp,
-            coordinates: {
-                longitude: parseFloat(gp.longitude),
-                latitude: parseFloat(gp.latitude)
-            }
+                ...gp,
+                coordinates: {
+                    longitude: parseFloat(gp.longitude),
+                    latitude: parseFloat(gp.latitude)
+                }
             }));
 
             res.json({

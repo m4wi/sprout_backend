@@ -9,15 +9,15 @@ import uploadGreenpointPhoto from '../middlewares/uploadGreenpointPhoto.js';
 const router = Router();
 
 
-router.get('/', GreenPointController.getAllGreenPoints )
+router.get('/', GreenPointController.getAllGreenPoints)
 // Rutas específicas antes de genéricas
 router.get('/myCollections', authenticateToken, GreenPointController.getMyCollections)
-router.get('/:id', GreenPointController.getGreenPoint)
-router.post('/', GreenPointController.createGreenPoint )
-router.delete('/:id', GreenPointController.deleteGreenPoint)
-
-router.get('/findCategory/:categoryId', GreenPointController.findGreenPointsByCategory)
 router.get('/nearby', GreenPointController.findGreenPointsByLocation)
+router.get('/findCategory/:categoryId', GreenPointController.findGreenPointsByCategory)
+
+router.get('/:id', GreenPointController.getGreenPoint)
+router.post('/', GreenPointController.createGreenPoint)
+router.delete('/:id', GreenPointController.deleteGreenPoint)
 
 // (ubicada arriba) Obtener greenpoints donde el usuario es recolector
 
@@ -45,9 +45,11 @@ router.post('/:id/photos', authenticateToken, uploadGreenpointPhoto.single('phot
 
 // Materiales del greenpoint (requiere autenticación)
 router.get('/:id/materials', authenticateToken, GreenPointController.getGreenPointsMaterial);
+router.post('/:id/materials', authenticateToken, GreenPointController.assignMaterialsToGreenPoint);
 
 // Categorías del greenpoint
 router.get('/:id/categories', GreenPointController.getCategories);
+router.post('/:id/categories', authenticateToken, GreenPointController.assignCategory);
 
 // Chat del greenpoint
 router.get('/:id/chat', authenticateToken, ChatController.getChatByGreenpoint);

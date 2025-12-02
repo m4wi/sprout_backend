@@ -29,11 +29,14 @@ export class GreenpointCategory {
 
             // 2. Insertar nuevas asignaciones
             const values = [];
+            values.push(greenpointId);
             const placeholders = [];
             for (let i = 0; i < categoryIds.length; i++) {
                 placeholders.push(`($1, $${i + 2})`);
-                values.push(greenpointId, categoryIds[i]);
+                values.push(categoryIds[i]);
             }
+
+            console.log(values);
 
             await client.query(
                 `INSERT INTO greenpoints_categories (id_greenpoint, id_category) 

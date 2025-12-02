@@ -13,6 +13,7 @@ import userRoutes from './src/routes/user.routes.js'
 import greenpointRoutes from './src/routes/greenpoint.routes.js'
 import reservationRoutes from './src/routes/greenpointReservation.routes.js'
 import authRoutes from './src/routes/auth.routes.js'
+import notificationRoutes from './src/routes/notification.routes.js'
 
 
 const app = express();
@@ -39,6 +40,7 @@ app.use('/users', userRoutes);
 app.use('/greenpoints', greenpointRoutes);
 app.use('/api', reservationRoutes);
 app.use('/auth', authRoutes);
+app.use('/notifications', notificationRoutes);
 
 import upload from './src/middlewares/upload.js'
 
@@ -46,8 +48,9 @@ import upload from './src/middlewares/upload.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-app.use('/profile_photo', express.static(join(__dirname, 'storage', 'profile_photo')));
-app.use('/greenpoint_photo', express.static(join(__dirname, 'storage', 'greenpoint_photo')));
+
+app.use('/profile_photo', express.static(join(__dirname, 'src', 'storage', 'profile_photo')));
+app.use('/greenpoint_photo', express.static(join(__dirname, 'src', 'storage', 'greenpoint_photo')));
 
 
 

@@ -1,4 +1,4 @@
--- Active: 1764120249245@@ep-fragrant-resonance-ac3k1ssp-pooler.sa-east-1.aws.neon.tech@5432@sprout
+-- Active: 1764131216201@@ep-fragrant-resonance-ac3k1ssp-pooler.sa-east-1.aws.neon.tech@5432@sprout
 
 CREATE TABLE users (
     id_user SERIAL PRIMARY KEY,
@@ -64,12 +64,23 @@ ALTER TABLE greenpoints ADD COLUMN hour TEXT;
 
 ALTER TABLE greenpoints ADD COLUMN direction TEXT;
 
+ALTER TABLE greenpoints
+ADD COLUMN date_collect TIMESTAMP WITHOUT TIME ZONE;
+
 CREATE TABLE greenpoint_material (
     id_greenpoint_material SERIAL PRIMARY KEY,
     id_greenpoint INTEGER NOT NULL,
     quantity NUMERIC(10, 3) NOT NULL,
     unit VARCHAR(10) NOT NULL DEFAULT 'unit',
     description TEXT,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+)
+
+CREATE TABLE greenpoint_images (
+    id_greenpoint_image SERIAL PRIMARY KEY,
+    id_greenpoint INTEGER NOT NULL,
+    image_url TEXT,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 )

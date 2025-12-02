@@ -63,7 +63,10 @@ export class GreenPointModel {
             stars,
             id_citizen,
             id_collector,
-            status = 'created'
+            status = 'created',
+            hour,
+            direction,
+            date_collect
         } = greenPointData;
 
         // ✅ Validar que coordinates sea un objeto con longitude y latitude
@@ -87,7 +90,12 @@ export class GreenPointModel {
             stars,
             id_citizen,
             id_collector,
-            status
+            status,
+            hour,
+            direction,
+            date_collect,
+            longitude,
+            latitude
             ) VALUES (
             $1,
             POINT($2, $3),   -- ← Aquí está la clave: POINT(longitude, latitude)
@@ -96,7 +104,12 @@ export class GreenPointModel {
             $6,
             $7,
             $8,
-            $9
+            $9,
+            $10,
+            $11,
+            $12,
+            $2,
+            $3
             )
             RETURNING *`;
 
@@ -109,7 +122,10 @@ export class GreenPointModel {
             stars || null,
             id_citizen,
             id_collector || null,
-            status
+            status,
+            hour || null,
+            direction || null,
+            date_collect || null
         ];
 
         const result = await pool.query(query, values);
