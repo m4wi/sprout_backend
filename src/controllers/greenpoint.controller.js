@@ -141,7 +141,7 @@ export class GreenPointController {
             }
 
             // 5. Definir campos permitidos (lista blanca)
-            const allowedFields = ['description', 'stars', 'qr_code'];
+            const allowedFields = ['description', 'stars', 'coordinates', 'id_collector', 'status', 'hour', 'direction', 'date_collect'];
             const updates = {};
 
             for (const field of allowedFields) {
@@ -155,7 +155,7 @@ export class GreenPointController {
             }
 
             // 6. Actualizar en la base de datos
-            const updatedPoint = await Greenpoint.update(pointId, updates);
+            const updatedPoint = await GreenPointModel.update(pointId, updates);
             if (!updatedPoint) {
                 return res.status(500).json({ error: 'Error al actualizar el greenpoint' });
             }
@@ -505,7 +505,6 @@ export class GreenPointController {
         try {
             const { status } = req.query; // Filtro opcional por estado
             const userId = req.userId; // Del middleware authenticateToken
-            console.log(userId)
             if (!userId) {
                 return res.status(401).json({ error: 'No autorizado. Debes estar autenticado' });
             }
@@ -523,4 +522,83 @@ export class GreenPointController {
         }
     }
 
+    static async getUserGreenPoints(req, res) {
+        try {
+            const { id } = req.params;
+            const { page = 1, limit = 10 } = req.query;
+
+            const pageNum = parseInt(page, 10);
+            const limitNum = parseInt(limit, 10);
+
+            if (isNaN(pageNum) || pageNum < 1) {
+                return res.status(400).json({ error: 'Página debe ser un número positivo' });
+            }
+            if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+                return res.status(400).json({ error: 'Límite debe estar entre 1 y 100' });
+            }
+
+            const result = await GreenPointModel.findByCitizen(id, pageNum, limitNum);
+
+            res.json({
+                citizen_id: id,
+                greenpoints: result.rows,
+                pagination: {
+                    currentPage: result.page,
+                    totalPages: result.totalPages,
+                    totalCount: result.totalCount,
+                    limit: limitNum
+                }
+            });
+        } catch (err) {
+            console.error('Error al obtener mis greenpoints como ciudadano:', err);
+            res.status(500).json({ error: 'Error al cargar los greenpoints' });
+        }
+    }
+
+    static async getPosts(req, res) {
+        try {
+            const { id } = req.params;
+            const { page = 1, limit = 10 } = req.query;
+
+            const pageNum = parseInt(page, 10);
+            const limitNum = parseInt(limit, 10);
+
+            if (isNaN(pageNum) || pageNum < 1) {
+                return res.status(400).json({ error: 'Página debe ser un número positivo' });
+            }
+            if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+                return res.status(400).json({ error: 'Límite debe estar entre 1 y 100' });
+            }
+
+            const result = await GreenPointModel.getAllPosts(pageNum, limitNum);
+
+            res.json({
+                greenpoints: result.rows,
+                pagination: {
+                    currentPage: result.page,
+                    totalPages: result.totalPages,
+                    totalCount: result.totalCount,
+                    limit: limitNum
+                }
+            });
+        } catch (err) {
+            console.error('Error al obtener mis greenpoints como ciudadano:', err);
+            res.status(500).json({ error: 'Error al cargar los greenpoints' });
+        }
+    }
+
+    static async getUpdateGreenPointData(req, res) {
+        try {
+            const { greenPointId } = req.params;
+
+            const result = await GreenPointModel.getGreenPointData(greenPointId);
+            if (!result) {
+                return res.status(500).json({ error: 'Error al obtener informacion  del greenpoint' });
+            }
+            res.json(result);
+        } catch (err) {
+            console.error('Error al obtener el greenpoint:', err);
+            res.status(500).json({ error: 'Error al obtener el greenpoint' });
+        }
+    }
 }   

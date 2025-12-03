@@ -41,6 +41,8 @@ app.use('/greenpoints', greenpointRoutes);
 app.use('/api', reservationRoutes);
 app.use('/auth', authRoutes);
 app.use('/notifications', notificationRoutes);
+import reportRoutes from './src/routes/greenpointReport.routes.js';
+app.use('/reports', reportRoutes);
 
 import upload from './src/middlewares/upload.js'
 

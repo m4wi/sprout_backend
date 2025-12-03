@@ -357,5 +357,20 @@ export class GreenpointReservationController {
             res.status(500).json({ error: 'Error al cancelar la reserva' });
         }
     }
+
+    static async getReservedGreenpoints(req, res) {
+        try {
+            const userId = req.userId;
+            if (!userId) {
+                return res.status(401).json({ error: 'No autorizado' });
+            }
+
+            const reservedGreenpoints = await GreenpointReservationModel.getReservedGreenpoints(userId);
+            res.json(reservedGreenpoints);
+        } catch (err) {
+            console.error('Error al obtener greenpoints reservados:', err);
+            res.status(500).json({ error: 'Error al obtener greenpoints reservados' });
+        }
+    }
 }
 

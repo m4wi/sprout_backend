@@ -382,7 +382,7 @@ export class GreenPointModel {
         JOIN categories c ON gc.id_category = c.id_category
         JOIN users u ON g.id_citizen = u.id_user
         WHERE 
-        g.status = 'approved'
+        g.status != 'deleted'
         AND EXISTS (
             SELECT 1 
             FROM greenpoints_categories gc2 
@@ -447,7 +447,7 @@ export class GreenPointModel {
         const query = `
             SELECT *
             FROM greenpoints
-            WHERE status = 'approved'
+            WHERE status != 'deleted'
             AND longitude BETWEEN ($1::NUMERIC - $3::NUMERIC) AND ($1::NUMERIC + $3::NUMERIC)
             AND latitude BETWEEN ($2::NUMERIC - $4::NUMERIC) AND ($2::NUMERIC + $4::NUMERIC)
             ORDER BY 
@@ -481,6 +481,7 @@ export class GreenPointModel {
                 hour,
                 direction
             FROM greenpoints
+            WHERE status != 'deleted'
             WHERE id_collector = $1
         `;
         const params = [id_collector];
@@ -494,5 +495,81 @@ export class GreenPointModel {
 
         const result = await pool.query(query, params);
         return result.rows;
+    }
+
+    static async findByCitizen(id_citizen, page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+
+        const query = `
+            SELECT * 
+            FROM view_greenpoints_details 
+            WHERE id_citizen = $1
+            AND status != 'deleted'
+            ORDER BY created_at DESC
+            LIMIT $2 OFFSET $3
+        `;
+
+        const countQuery = `
+            SELECT COUNT(*) 
+            FROM greenpoints 
+            WHERE id_citizen = $1
+        `;
+
+        const [result, countResult] = await Promise.all([
+            pool.query(query, [id_citizen, limit, offset]),
+            pool.query(countQuery, [id_citizen])
+        ]);
+
+        const totalCount = parseInt(countResult.rows[0].count, 10);
+
+        return {
+            rows: result.rows,
+            totalCount,
+            page,
+            totalPages: Math.ceil(totalCount / limit)
+        };
+    }
+
+    static async getAllPosts(page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+
+        const query = `
+            SELECT * 
+            FROM view_greenpoints_details
+            WHERE status != 'deleted'
+            ORDER BY created_at ASC
+            LIMIT $1 OFFSET $2
+        `;
+
+        const countQuery = `
+            SELECT COUNT(*) 
+            FROM greenpoints 
+        `;
+
+        const [result, countResult] = await Promise.all([
+            pool.query(query, [limit, offset]),
+            pool.query(countQuery)
+        ]);
+
+        const totalCount = parseInt(countResult.rows[0].count, 10);
+
+        return {
+            rows: result.rows,
+            totalCount,
+            page,
+            totalPages: Math.ceil(totalCount / limit)
+        };
+    }
+
+    static async getGreenPointData(greenPointId) {
+        const query = `
+            SELECT * 
+            FROM view_greenpoints_details
+            WHERE status != 'deleted'
+            AND id_greenpoint = $1
+        `;
+
+        const result = await pool.query(query, [greenPointId]);
+        return result.rows[0];
     }
 }

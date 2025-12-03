@@ -10,10 +10,13 @@ const router = Router();
 
 
 router.get('/', GreenPointController.getAllGreenPoints)
+router.patch('/:id', authenticateToken, GreenPointController.updateGreenPoint)
 // Rutas específicas antes de genéricas
 router.get('/myCollections', authenticateToken, GreenPointController.getMyCollections)
 router.get('/nearby', GreenPointController.findGreenPointsByLocation)
 router.get('/findCategory/:categoryId', GreenPointController.findGreenPointsByCategory)
+router.get('/posts', authenticateToken, GreenPointController.getPosts);
+router.get('/fulldata/:greenPointId', authenticateToken, GreenPointController.getUpdateGreenPointData);
 
 router.get('/:id', GreenPointController.getGreenPoint)
 router.post('/', GreenPointController.createGreenPoint)
@@ -37,6 +40,10 @@ router.patch('/comments/:id', authenticateToken, GreenpointCommentController.upd
 // Eliminar un comentario (requiere autenticación)
 router.delete('/comments/:id', authenticateToken, GreenpointCommentController.deleteComment);
 
+// Obtener greenpoints de un usuario (requiere autenticación)
+router.get('/users/:id', authenticateToken, GreenPointController.getUserGreenPoints);
+
+
 // Obtener comentarios de un usuario
 router.get('/users/:id/comments', GreenpointCommentController.getCommentsByUser);
 
@@ -54,5 +61,7 @@ router.post('/:id/categories', authenticateToken, GreenPointController.assignCat
 // Chat del greenpoint
 router.get('/:id/chat', authenticateToken, ChatController.getChatByGreenpoint);
 router.post('/:id/chat/message', authenticateToken, ChatController.sendMessageToGreenpoint);
+
+
 
 export default router;

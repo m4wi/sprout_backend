@@ -41,5 +41,7 @@ router.patch('/reservations/:id/reject', authenticateToken, GreenpointReservatio
 // Cancelar una reserva (requiere autenticación y ser el recolector)
 router.patch('/reservations/:id/cancel', authenticateToken, GreenpointReservationController.cancelReservation);
 
+router.get('/reserved-greenpoints', authenticateToken, GreenpointReservationController.getReservedGreenpoints);
+
 export default router;
 

@@ -291,5 +291,16 @@ export class GreenpointReservationModel {
         const result = await pool.query(query, [id_greenpoint, excludeReservationId]);
         return result.rows.length;
     }
+
+    static async getReservedGreenpoints(userId) {
+        const query = `
+            SELECT *
+            FROM greenpoints g
+            WHERE g.id_citizen = $1
+              AND g.status IN ('reserved', 'terminated');
+        `;
+        const result = await pool.query(query, [userId]);
+        return result.rows;
+    }
 }
 
