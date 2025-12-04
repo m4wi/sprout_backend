@@ -56,10 +56,26 @@ app.use('/greenpoint_photo', express.static(join(__dirname, 'src', 'storage', 'g
 
 
 
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { initChatSocket } from './src/sockets/chat.socket.js';
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`)
-})
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  }
+});
+
+initChatSocket(io);
+
+httpServer.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
 
 export default app;
 

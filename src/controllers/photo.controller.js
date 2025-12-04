@@ -21,6 +21,16 @@ export class PhotoController {
             const { id } = req.params;
             const greenpointId = parseInt(id, 10);
             const userId = req.userId;
+
+            const contentType = req.headers['content-type'] || '';
+            if (!contentType.includes('multipart/form-data')) {
+                console.warn('[PhotoController] Invalid Content-Type:', contentType);
+                return res.status(400).json({
+                    error: 'Content-Type incorrecto',
+                    message: `Se espera 'multipart/form-data', se recibió '${contentType}'. Si estás probando con una herramienta, asegúrate de enviar el archivo como 'form-data' y NO establecer el header Content-Type manualmente.`
+                });
+            }
+
             if (!userId) {
                 return res.status(401).json({ error: 'No autorizado' });
             }
@@ -31,16 +41,21 @@ export class PhotoController {
             if (!point) {
                 return res.status(404).json({ error: 'Greenpoint no encontrado' });
             }
-            if (point.id_citizen !== userId) {
+
+            // Loose equality to handle string/number differences
+            if (point.id_citizen != userId) {
+                console.warn(`[PhotoController] Permission denied. Owner: ${point.id_citizen}, User: ${userId}`);
                 return res.status(403).json({ error: 'Sin permiso' });
             }
             if (!req.file) {
+                console.warn('[PhotoController] No file received');
                 return res.status(400).json({ error: 'Archivo requerido' });
             }
-            const url = `/greenpoint_photo/${req.file.filename}`;
+            const url = `${req.file.filename}`;
             const created = await PhotoModel.create(greenpointId, url);
             res.status(201).json(created);
         } catch (err) {
+            console.error('[PhotoController] Error uploading photo:', err);
             res.status(500).json({ error: 'Error al subir foto' });
         }
     }

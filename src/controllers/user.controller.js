@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
-  throw new Error('SECRET_KEY no está definida en las variables de entorno');
+    throw new Error('SECRET_KEY no está definida en las variables de entorno');
 }
 
 
@@ -24,16 +24,16 @@ export class UserController {
         }
     }
 
-    static async createUser(req,res) {
+    static async createUser(req, res) {
 
-        const { username, password_hash, user_type} = req.body;
-        
+        const { username, password_hash, user_type } = req.body;
+
         if (!username || !password_hash || !user_type) {
             res.status(400).json({ error: "Faltan datos obligatorios" });
         }
 
         try {
-            const userExists = await UserModel.findByUsername( username );
+            const userExists = await UserModel.findByUsername(username);
             console.log(req.body)
             if (userExists) {
                 res.status(409).json({ error: "El usuario ya existe" });
@@ -53,7 +53,7 @@ export class UserController {
                 token
             });
 
-        } catch ( err ) {
+        } catch (err) {
             res.status(500).json({ error: "Error al registrar usuario" });
         }
     }
@@ -65,7 +65,7 @@ export class UserController {
         const allowedFields = [
             'name', 'lastname', 'phone', 'avatar_url', 'profile_description', "email", "user_type", "username", "direction"
         ];
-        
+
         // Filtrar solo campos permitidos y que estén presentes
         const filteredUpdates = {};
         for (const field of allowedFields) {
@@ -84,7 +84,7 @@ export class UserController {
                 res.status(404).json({ error: 'Usuario no encontrado' });
             }
             res.json(updatedUser);
-        } catch ( error ) {
+        } catch (error) {
             res.status(500).json({ error: 'Error al actualizar usuario' });
         }
     }
@@ -96,17 +96,16 @@ export class UserController {
                 return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
             }
 
-            const userId = req.user?.id; // Asume que usas autenticación
+            const { id } = req.params;
 
-            if (!userId) {
-                return res.status(401).json({ error: 'No autorizado' });
+            if (!id) {
+                return res.status(400).json({ error: 'ID de usuario no proporcionado' });
             }
 
-            // Ruta relativa para guardar en la DB (sin 'uploads/')
-            const avatarUrl = `/storage/profile_photo/${req.file.filename}`;
+            // Guardamos el nombre del archivo completo (con extensión)
+            const filename = req.file.filename;
 
-            // Actualizar el avatar en la DB
-            const updatedUser = await this.updateUser(userId, { avatar_url: avatarUrl });
+            const updatedUser = await UserModel.update(id, { avatar_url: filename });
 
             if (!updatedUser) {
                 return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -114,7 +113,7 @@ export class UserController {
 
             res.json({
                 message: 'Avatar actualizado',
-                avatarUrl: avatarUrl
+                avatar_url: filename
             });
         } catch (err) {
             console.error('Error al subir avatar:', err);

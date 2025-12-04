@@ -296,7 +296,7 @@ export class GreenpointReservationModel {
         const query = `
             SELECT *
             FROM greenpoints g
-            WHERE g.id_citizen = $1
+            WHERE g.id_collector = $1
               AND g.status IN ('reserved', 'terminated');
         `;
         const result = await pool.query(query, [userId]);
