@@ -121,6 +121,38 @@ export class UserController {
         }
     };
 
+
+    static async getAllUsers(req, res) {
+        try {
+            const users = await UserModel.findAll();
+            res.json(users);
+        } catch (err) {
+            console.error('Error al obtener usuarios:', err);
+            res.status(500).json({ error: 'Error interno del servidor' });
+        }
+    }
+
+    static async toggleUserStatus(req, res) {
+        try {
+            const { id } = req.params;
+            const { active } = req.body; // Expecting boolean
+
+            if (typeof active !== 'boolean') {
+                return res.status(400).json({ error: 'El estado debe ser un booleano' });
+            }
+
+            const updatedUser = await UserModel.updateStatus(id, active);
+
+            if (!updatedUser) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+
+            res.json(updatedUser);
+        } catch (err) {
+            console.error('Error al cambiar estado del usuario:', err);
+            res.status(500).json({ error: 'Error interno del servidor' });
+        }
+    }
 }
 
 export const userProfile = async (req, res) => {

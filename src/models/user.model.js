@@ -7,15 +7,15 @@ export class UserModel {
     static async findByCredentials(email, password_hash) {
         const result = await pool.query(
             'SELECT * FROM users WHERE email=$1 AND password_hash=$2',
-            [ email, password_hash]);
+            [email, password_hash]);
         return result.rows[0] || null;
     }
-    
+
 
     static async findById(id) {
         const result = await pool.query(
             'SELECT * FROM users WHERE id_user = $1',
-        [id]
+            [id]
         );
         return result.rows[0] || null;
     }
@@ -23,13 +23,13 @@ export class UserModel {
     static async findByUsername(userName) {
         const result = await pool.query(
             'SELECT * FROM users WHERE username = $1',
-        [userName]
+            [userName]
         );
         return result.rows[0] || null;
     }
 
 
-    static async create( userData ) {
+    static async create(userData) {
         const {
             name,
             lastname,
@@ -41,10 +41,10 @@ export class UserModel {
         } = userData;
 
         const result = await pool.query(
-        `INSERT INTO users (name, lastname, username, email, password_hash, phone, user_type)
+            `INSERT INTO users (name, lastname, username, email, password_hash, phone, user_type)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *`,
-        [name, lastname, username, email, password_hash, phone, user_type]
+            [name, lastname, username, email, password_hash, phone, user_type]
         );
         return result.rows[0];
     }
@@ -53,8 +53,8 @@ export class UserModel {
 
         // Construir dinámicamente la cláusula SET
         const setClause = Object.keys(filteredUpdates)
-        .map((key, i) => `"${key}" = $${i + 2}`)
-        .join(', ');
+            .map((key, i) => `"${key}" = $${i + 2}`)
+            .join(', ');
 
         const values = [id, ...Object.values(filteredUpdates)];
         const query = `
@@ -67,6 +67,20 @@ export class UserModel {
 
         const result = await pool.query(query, values);
 
+        return result.rows[0] || null;
+    }
+    static async findAll() {
+        const result = await pool.query(
+            'SELECT id_user, name, lastname, username, email, phone, user_type, active, created_at FROM users ORDER BY created_at DESC'
+        );
+        return result.rows;
+    }
+
+    static async updateStatus(id, active) {
+        const result = await pool.query(
+            'UPDATE users SET active = $1 WHERE id_user = $2 RETURNING *',
+            [active, id]
+        );
         return result.rows[0] || null;
     }
 }

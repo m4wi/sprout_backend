@@ -95,7 +95,7 @@ export class GreenPointController {
                 return res.status(404).json({ error: 'Greenpoint no encontrado' });
             }
 
-            if (point.id_citizen !== userId) {
+            if (point.id_citizen !== userId && req.user.tipo !== 'admin') {
                 return res.status(403).json({ error: 'No tienes permiso para eliminar este greenpoint' });
             }
 
@@ -136,7 +136,8 @@ export class GreenPointController {
             }
 
             // 4. Verificar autorización (solo el dueño)
-            if (currentPoint.id_citizen !== userId) {
+            // 4. Verificar autorización (solo el dueño o admin)
+            if (currentPoint.id_citizen !== userId && req.user.tipo !== 'admin') {
                 return res.status(403).json({ error: 'No tienes permiso para actualizar este greenpoint' });
             }
 

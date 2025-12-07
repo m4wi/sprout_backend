@@ -12,4 +12,22 @@ export class GreenPointReportModel {
         const result = await pool.query(query, values);
         return result.rows[0];
     }
+
+    static async getAll() {
+        const result = await pool.query(
+            `SELECT r.*, u.username, u.email 
+             FROM greenpoints_report r
+             JOIN users u ON r.id_user = u.id_user
+             ORDER BY r.created_at DESC`
+        );
+        return result.rows;
+    }
+
+    static async delete(id) {
+        const result = await pool.query(
+            'DELETE FROM greenpoints_report WHERE id_report = $1 RETURNING *',
+            [id]
+        );
+        return result.rows[0];
+    }
 }

@@ -10,7 +10,6 @@ export class GreenpointReservationController {
     static async createReservation(req, res) {
         try {
             const { id } = req.params;
-            const { message } = req.body;
             const userId = req.userId; // Del middleware authenticateToken
 
             if (!userId) {
@@ -34,15 +33,14 @@ export class GreenpointReservationController {
             }
 
             // Verificar que el greenpoint esté disponible (no tenga un recolector asignado)
-            if (greenpoint.id_collector) {
-                return res.status(400).json({ error: 'Este greenpoint ya tiene un recolector asignado' });
-            }
+            //if (greenpoint.id_collector) {
+            //    return res.status(400).json({ error: 'Este greenpoint ya tiene un recolector asignado' });
+            //}
 
             // Crear la reserva
             const newReservation = await GreenpointReservationModel.create({
                 id_greenpoint: greenpointId,
                 id_collector: userId,
-                message
             });
 
             // Obtener la reserva con información completa
