@@ -1,7 +1,9 @@
 import pool from '../database/db.js';
 
 export class GreenPointModel {
-    static async getAllPoints() {
+    static async getAllPoints(page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+
         const query = `
         SELECT 
             g.id_greenpoint,
@@ -18,40 +20,75 @@ export class GreenPointModel {
             g.hour,
             g.direction,
             u.phone,
-            ARRAY_AGG(DISTINCT c.name) FILTER (WHERE c.id_category IS NOT NULL) AS categories,
-            COALESCE(
-              JSON_AGG(
-                JSON_BUILD_OBJECT(
-                  'quantity', gm.quantity,
-                  'unit', gm.unit,
-                  'description', gm.description
+            CONCAT(u.name, ' ', u.lastname) AS citizen_name,
+            u.avatar_url,
+            (
+                SELECT COALESCE(
+                    JSON_AGG(
+                        JSON_BUILD_OBJECT(
+                            'id_category', c.id_category,
+                            'name', c.name,
+                            'description', c.description,
+                            'icon_url', c.icon_url,
+                            'color_hex', c.color_hex
+                        )
+                    ), '[]'
                 )
-              ) FILTER (WHERE gm.id_greenpoint_material IS NOT NULL), '[]'
+                FROM greenpoints_categories gc
+                JOIN categories c ON gc.id_category = c.id_category
+                WHERE gc.id_greenpoint = g.id_greenpoint
+            ) AS categories,
+            (
+                SELECT COALESCE(
+                        JSON_AGG(
+                            json_build_object(
+                                'id', p.id_greenpoint_image, 'url', p.image_url
+                            )
+                        ), '[]'
+                    )
+                FROM greenpoint_images p
+                WHERE
+                    p.id_greenpoint = g.id_greenpoint
+            ) AS photos,
+            (
+                SELECT COALESCE(
+                  JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id_greenpoint_material', gm.id_greenpoint_material,
+                      'quantity', gm.quantity,
+                      'unit', gm.unit,
+                      'description', gm.description
+                    )
+                  ), '[]'
+                )
+                FROM greenpoint_material gm
+                WHERE gm.id_greenpoint = g.id_greenpoint
             ) AS materials
         FROM greenpoints g
         LEFT JOIN users u ON g.id_citizen = u.id_user
-        LEFT JOIN greenpoints_categories gc ON g.id_greenpoint = gc.id_greenpoint
-        LEFT JOIN categories c ON gc.id_category = c.id_category
-        LEFT JOIN greenpoint_material gm ON g.id_greenpoint = gm.id_greenpoint
-        WHERE g.status != 'deleted'
-        GROUP BY 
-            g.id_greenpoint,
-            g.id_category,
-            g.description,
-            g.qr_code,
-            g.stars,
-            g.id_citizen,
-            g.id_collector,
-            g.created_at,
-            g.updated_at,
-            g.status,
-            g.hour,
-            g.direction,
-            u.phone
-        ORDER BY g.created_at DESC`;
+        WHERE g.status != 'deleted' AND u.active = TRUE
+        ORDER BY g.created_at DESC
+        LIMIT $1 OFFSET $2`;
 
-        const result = await pool.query(query);
-        return result.rows;
+        const countQuery = `
+        SELECT COUNT(DISTINCT g.id_greenpoint) 
+        FROM greenpoints g 
+        LEFT JOIN users u ON g.id_citizen = u.id_user
+        WHERE g.status != 'deleted' AND u.active = TRUE`;
+
+        const [result, countResult] = await Promise.all([
+            pool.query(query, [limit, offset]),
+            pool.query(countQuery)
+        ]);
+
+        const totalCount = parseInt(countResult.rows[0].count, 10);
+
+        return {
+            rows: result.rows,
+            totalCount,
+            page,
+            totalPages: Math.ceil(totalCount / limit)
+        };
     }
 
     static async create(greenPointData) {
@@ -376,7 +413,19 @@ export class GreenPointModel {
             'icon_url', c.icon_url,
             'color_hex', c.color_hex
             )
-        ) AS categories
+        ) AS categories,
+        (
+            SELECT COALESCE(
+                    JSON_AGG(
+                        json_build_object(
+                            'id', p.id_greenpoint_image, 'url', p.image_url
+                        )
+                    ), '[]'
+                )
+            FROM greenpoint_images p
+            WHERE
+                p.id_greenpoint = g.id_greenpoint
+        ) AS photos
         FROM greenpoints g
         JOIN greenpoints_categories gc ON g.id_greenpoint = gc.id_greenpoint
         JOIN categories c ON gc.id_category = c.id_category
@@ -424,6 +473,32 @@ export class GreenPointModel {
             page,
             totalPages: Math.ceil(totalCount / limit)
         };
+    }
+
+    /**
+     * Busca greenpoints por descripción (autocompletado)
+     */
+    static async searchByDescription(queryText, limit = 3) {
+        const query = `
+            SELECT 
+                g.id_greenpoint,
+                g.description,
+                g.direction,
+                (
+                    SELECT p.image_url 
+                    FROM greenpoint_images p 
+                    WHERE p.id_greenpoint = g.id_greenpoint 
+                    LIMIT 1
+                ) as image_url
+            FROM greenpoints g
+            WHERE 
+                g.status != 'deleted' 
+                AND g.description ILIKE $1
+            ORDER BY g.created_at DESC
+            LIMIT $2
+        `;
+        const result = await pool.query(query, [`%${queryText}%`, limit]);
+        return result.rows;
     }
 
     /**
@@ -506,13 +581,13 @@ export class GreenPointModel {
             WHERE id_citizen = $1
             AND status != 'deleted'
             ORDER BY created_at DESC
-            LIMIT $2 OFFSET $3
+        LIMIT $2 OFFSET $3
         `;
 
         const countQuery = `
             SELECT COUNT(*) 
             FROM greenpoints 
-            WHERE id_citizen = $1
+            WHERE id_citizen = $1 AND status != 'deleted'
         `;
 
         const [result, countResult] = await Promise.all([

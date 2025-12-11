@@ -6,8 +6,29 @@ export class GreenPointController {
 
     static async getAllGreenPoints(req, res) {
         try {
-            const allGreenPoints = await GreenPointModel.getAllPoints();
-            res.json(allGreenPoints);
+            const { page = 1, limit = 10 } = req.query;
+
+            const pageNum = parseInt(page, 10);
+            const limitNum = parseInt(limit, 10);
+
+            if (isNaN(pageNum) || pageNum < 1) {
+                return res.status(400).json({ error: 'Página debe ser un número positivo' });
+            }
+            if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+                return res.status(400).json({ error: 'Límite debe estar entre 1 y 100' });
+            }
+
+            const result = await GreenPointModel.getAllPoints(pageNum, limitNum);
+
+            res.json({
+                greenpoints: result.rows,
+                pagination: {
+                    currentPage: result.page,
+                    totalPages: result.totalPages,
+                    totalCount: result.totalCount,
+                    limit: limitNum
+                }
+            });
         } catch (err) {
             console.error('Error al obtener greenpoints:', err);
             res.status(500).json({ error: 'Error al cargar los puntos' });
@@ -100,7 +121,7 @@ export class GreenPointController {
             }
 
             // Actualizar status a 'deleted'
-            const deletedPoint = await Greenpoint.softDelete(pointId);
+            const deletedPoint = await GreenPointModel.softDelete(pointId);
             if (!deletedPoint) {
                 return res.status(500).json({ error: 'Error al eliminar el greenpoint' });
             }
@@ -414,6 +435,21 @@ export class GreenPointController {
         }
     }
 
+    static async searchGreenPoints(req, res) {
+        try {
+            const { q } = req.query;
+            if (!q || q.length < 3) {
+                return res.json([]); // Return empty if query is too short
+            }
+
+            const results = await GreenPointModel.searchByDescription(q, 3);
+            res.json(results);
+        } catch (err) {
+            console.error('Error al buscar greenpoints:', err);
+            res.status(500).json({ error: 'Error en la búsqueda' });
+        }
+    }
+
     static async findGreenPointsByCategory(req, res) {
         try {
             const { categoryId } = req.params;
@@ -600,6 +636,41 @@ export class GreenPointController {
         } catch (err) {
             console.error('Error al obtener el greenpoint:', err);
             res.status(500).json({ error: 'Error al obtener el greenpoint' });
+        }
+    }
+
+    static async finishGreenPoint(req, res) {
+        try {
+            const { id } = req.params;
+            const userId = req.user?.id;
+
+            if (!userId) {
+                return res.status(401).json({ error: 'No autorizado' });
+            }
+
+            const pointId = parseInt(id, 10);
+            if (isNaN(pointId)) {
+                return res.status(400).json({ error: 'ID inválido' });
+            }
+
+            const point = await GreenPointModel.findById(pointId);
+            if (!point) {
+                return res.status(404).json({ error: 'Greenpoint no encontrado' });
+            }
+
+            // Permitir finalizar si es el dueño O el recolector asignado
+            if (point.id_citizen !== userId && point.id_collector !== userId && req.user.tipo !== 'admin') {
+                return res.status(403).json({ error: 'No tienes permiso para finalizar este greenpoint' });
+            }
+
+            // Actualizar status
+            const updated = await GreenPointModel.update(pointId, { status: 'terminated' });
+
+            res.json({ message: 'Greenpoint finalizado exitosamente', greenpoint: updated });
+
+        } catch (err) {
+            console.error('Error al finalizar greenpoint:', err);
+            res.status(500).json({ error: 'Error al finalizar el greenpoint' });
         }
     }
 }   

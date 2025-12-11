@@ -11,8 +11,10 @@ const router = Router();
 
 router.get('/', GreenPointController.getAllGreenPoints)
 router.patch('/:id', authenticateToken, GreenPointController.updateGreenPoint)
+router.patch('/:id/finish', authenticateToken, GreenPointController.finishGreenPoint)
 // Rutas específicas antes de genéricas
 router.get('/myCollections', authenticateToken, GreenPointController.getMyCollections)
+router.get('/search', GreenPointController.searchGreenPoints)
 router.get('/nearby', GreenPointController.findGreenPointsByLocation)
 router.get('/findCategory/:categoryId', GreenPointController.findGreenPointsByCategory)
 router.get('/posts', authenticateToken, GreenPointController.getPosts);
@@ -20,7 +22,7 @@ router.get('/fulldata/:greenPointId', authenticateToken, GreenPointController.ge
 
 router.get('/:id', GreenPointController.getGreenPoint)
 router.post('/', GreenPointController.createGreenPoint)
-router.delete('/:id', GreenPointController.deleteGreenPoint)
+router.delete('/:id', authenticateToken, GreenPointController.deleteGreenPoint)
 
 // (ubicada arriba) Obtener greenpoints donde el usuario es recolector
 
@@ -49,6 +51,7 @@ router.get('/users/:id/comments', GreenpointCommentController.getCommentsByUser)
 
 router.get('/:id/photos', PhotoController.getPhotosByGreenpoint);
 router.post('/:id/photos', authenticateToken, uploadGreenpointPhoto.single('photo'), PhotoController.uploadPhoto);
+router.delete('/:id/photos/:photoId', authenticateToken, PhotoController.deletePhoto);
 
 // Materiales del greenpoint (requiere autenticación)
 router.get('/:id/materials', authenticateToken, GreenPointController.getGreenPointsMaterial);

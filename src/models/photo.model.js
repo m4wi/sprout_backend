@@ -19,4 +19,10 @@ export class PhotoModel {
         const result = await pool.query(query, [id_greenpoint, url]);
         return result.rows[0];
     }
+
+    static async delete(id) {
+        const query = 'DELETE FROM greenpoint_images WHERE id_greenpoint_image = $1 RETURNING *';
+        const result = await pool.query(query, [id]);
+        return result.rows[0];
+    }
 }

@@ -46,6 +46,12 @@ export function initChatSocket(io) {
             }
         });
 
+        socket.on('join_direct_chat', ({ chatId }) => {
+            const roomName = `direct_chat_${chatId}`;
+            socket.join(roomName);
+            console.log(`User ${socket.userId} joined direct chat ${roomName}`);
+        });
+
         socket.on('send_message', async ({ greenpoint_id, content }) => {
             try {
                 const gpId = parseInt(greenpoint_id, 10);

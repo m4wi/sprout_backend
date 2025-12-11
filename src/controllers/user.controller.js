@@ -36,7 +36,7 @@ export class UserController {
             const userExists = await UserModel.findByUsername(username);
             console.log(req.body)
             if (userExists) {
-                res.status(409).json({ error: "El usuario ya existe" });
+                return res.status(409).json({ error: "El usuario ya existe" });
             }
 
             const createdUser = await UserModel.create(req.body);
@@ -54,6 +54,7 @@ export class UserController {
             });
 
         } catch (err) {
+            console.error('Error creating user:', err);
             res.status(500).json({ error: "Error al registrar usuario" });
         }
     }

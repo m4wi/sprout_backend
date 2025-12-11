@@ -59,4 +59,35 @@ export class PhotoController {
             res.status(500).json({ error: 'Error al subir foto' });
         }
     }
+    static async deletePhoto(req, res) {
+        try {
+            const { id, photoId } = req.params;
+            const greenpointId = parseInt(id, 10);
+            const photoIdInt = parseInt(photoId, 10);
+            const userId = req.userId;
+
+            if (isNaN(greenpointId) || isNaN(photoIdInt)) {
+                return res.status(400).json({ error: 'IDs inválidos' });
+            }
+
+            const point = await GreenPointModel.findById(greenpointId);
+            if (!point) {
+                return res.status(404).json({ error: 'Greenpoint no encontrado' });
+            }
+
+            if (point.id_citizen != userId) {
+                return res.status(403).json({ error: 'Sin permiso' });
+            }
+
+            const deleted = await PhotoModel.delete(photoIdInt);
+            if (!deleted) {
+                return res.status(404).json({ error: 'Foto no encontrada' });
+            }
+
+            res.json({ message: 'Foto eliminada correctamente', photo: deleted });
+        } catch (err) {
+            console.error('[PhotoController] Error deleting photo:', err);
+            res.status(500).json({ error: 'Error al eliminar foto' });
+        }
+    }
 }

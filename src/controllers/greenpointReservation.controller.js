@@ -1,5 +1,6 @@
 import { GreenpointReservationModel } from '../models/greenpointReservation.model.js';
 import { GreenPointModel } from '../models/greenpoint.model.js';
+import { GreenpointChat } from '../models/greenpointChat.js';
 
 export class GreenpointReservationController {
     /**
@@ -246,6 +247,17 @@ export class GreenpointReservationController {
                 id_collector: reservation.id_collector,
                 status: 'reserved' // o 'en_proceso' según tu lógica
             });
+
+            // Crear chat automáticamente para este greenpoint
+            // Verificar si ya existe antes de crear (opcional, pero buena práctica)
+            const existingChat = await GreenpointChat.getByGreenPointId(reservation.id_greenpoint, 1);
+            if (!existingChat) {
+                await GreenpointChat.createChat(
+                    reservation.id_greenpoint,
+                    userId, // Creador/Citizen
+                    reservation.id_collector // Recolector
+                );
+            }
 
             // Obtener la reserva actualizada con información completa
             const reservationWithDetails = await GreenpointReservationModel.findById(reservationId);
