@@ -431,7 +431,7 @@ export class GreenPointModel {
         JOIN categories c ON gc.id_category = c.id_category
         JOIN users u ON g.id_citizen = u.id_user
         WHERE 
-        g.status != 'deleted'
+        g.status != 'deleted'  AND u.active = TRUE
         AND EXISTS (
             SELECT 1 
             FROM greenpoints_categories gc2 
@@ -492,7 +492,7 @@ export class GreenPointModel {
                 ) as image_url
             FROM greenpoints g
             WHERE 
-                g.status != 'deleted' 
+                g.status != 'deleted'
                 AND g.description ILIKE $1
             ORDER BY g.created_at DESC
             LIMIT $2
@@ -522,7 +522,7 @@ export class GreenPointModel {
         const query = `
             SELECT *
             FROM greenpoints
-            WHERE status != 'deleted'
+            WHERE status != 'deleted' 
             AND longitude BETWEEN ($1::NUMERIC - $3::NUMERIC) AND ($1::NUMERIC + $3::NUMERIC)
             AND latitude BETWEEN ($2::NUMERIC - $4::NUMERIC) AND ($2::NUMERIC + $4::NUMERIC)
             ORDER BY 
@@ -611,7 +611,7 @@ export class GreenPointModel {
         const query = `
             SELECT * 
             FROM view_greenpoints_details
-            WHERE status != 'deleted'
+            WHERE status != 'deleted' 
             ORDER BY created_at ASC
             LIMIT $1 OFFSET $2
         `;
